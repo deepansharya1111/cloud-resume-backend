@@ -10,6 +10,9 @@ This Terraform setup uses the `ansraliant/s3-state/aws` module to configure a re
   - After installing AWS CLI
   - RUN "aws configure"
   - Get Credentials: "right-click-on-AWS-profile -> security-credentials -> Create-Access-Keys.
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) for creating a Google Cloud storage bucket. Ensure you have an account with a project with billing enabled.
+  - "gcloud init" -> "gcloud projects list" -> "gcloud config set project your_project_id"
+  - Terraform requires gcloud's `credentials` or `access_token`. Set manually or run `gcloud auth application-default login`.
 
 ## Usage
 
@@ -17,9 +20,9 @@ This Terraform setup uses the `ansraliant/s3-state/aws` module to configure a re
 
    ```bash
    git clone git@github.com:deepansharya1111/cloud-resume-backend.git
-   cd cloud-resume-backend
+   cd cloud-resume-backend/terraform/
    ```
-2. (Optional) Customise the bucket_name and dynamodb_table names in backend.tf and main.tf with your desired globally unique names. Run `terraform fmt` to format if additional changes are made.
+2. (Optional) Customise the `bucket_name` and `dynamodb_table` names in backend.tf or `project` and `name` variables in gcp.tf with your desired globally unique names. Run `terraform fmt` to format if additional changes are made.
 3. Initialize Terraform:
    ```
    terraform init
@@ -35,6 +38,18 @@ This Terraform setup uses the `ansraliant/s3-state/aws` module to configure a re
 6. Apply your Terraform configuration:
    ```
    terraform apply
+   ```
+7. See Google cloud storage buckets:
+   ```
+   gsutil ls
+   ```
+8. See AWS DynamoDB tables
+   ```
+   aws dynamodb list-tables
+   ```
+9. See AWS S3 bucket
+   ```
+   aws s3 ls
    ```
 
 ## Configuration Details
