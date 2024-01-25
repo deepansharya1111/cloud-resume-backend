@@ -25,33 +25,19 @@ resource "google_storage_bucket" "gcp-static-site-bucket" {
 }
 
 
-#THERE ARE DIFFERENT WAYS OF MANAGING ACCESS CONTROL IN GOOGLE CLOUD STORAGE. For a static website, you usually want to make the content publicly accessible, so either the first or the second approach would be sufficient. 
-#But Here, I am using the first one as only IAM policy can be used when uniform_bucket_level_access is set to true.
+#THERE ARE DIFFERENT WAYS OF MANAGING ACCESS CONTROL IN GOOGLE CLOUD STORAGE. Like "google_storage_bucket_iam_binding" or "google_iam_policy" or "google_storage_default_object_access_control" or "google_storage_bucket_access_control"
 
-#1) google_storage_bucket_iam_policy Resource: This section is using IAM policies to control access. It's a more granular way to manage access controls, and it allows you to define different roles for different members or groups. In this case, it's granting roles/storage.objectViewer to allUsers.
+#Here, I am using the first one as IAM policy can only be used when uniform_bucket_level_access is set to true.
+
+#This section uses IAM policies to control access. It's a more granular way to manage access controls and allows you to define different roles for different members or groups. In this case, it's granting roles/storage.objectViewer to allUsers.
 #https://stackoverflow.com/a/60092530/15044789
 
-data "google_iam_policy" "viewer" {
-  binding {
-    role = "roles/storage.objectViewer"
-    members = [
-      # List of users/groups that should have access
-      # "user:your-email@example.com",
-      "allUsers",
-    ]
-  }
+resource "google_storage_bucket_iam_binding" "public_access" {
+  bucket = google_storage_bucket.gcp-static-site-bucket.name
+  role   = "roles/storage.objectViewer"
+  members = [
+    # List of users/groups that should have access
+    # "user:your-email@example.com",
+    "allUsers",
+  ]
 }
-
-#2) google_storage_bucket_access_control Resource: This section explicitly grants read access (READER role) to all users (allUsers). This is a simple way to make your bucket public. But USING it with UBLA set to true will give an error = error googleapi: Error 400: Cannot use ACL API to update bucket policy when uniform bucket-level access is enabled. Read more at https://cloud.google.com/storage/docs/uniform-bucket-level-access.
-#resource "google_storage_bucket_access_control" "public_rule" {
-#  bucket = google_storage_bucket.gcp-static-site-bucket.name
-#  role   = "READER"
-#  entity = "allUsers"
-#}
-
-#3) google_storage_default_object_access_control Resource: This section sets default object ACLs, meaning that any new object uploaded to the bucket will inherit these access controls by default. It achieves the same goal of making your bucket publicly readable.
-#resource "google_storage_default_object_access_control" "public_rule" {
-#  bucket = google_storage_bucket.bucket.name
-#  role   = "READER"
-#  entity = "allUsers"
-#}
