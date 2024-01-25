@@ -1,0 +1,1 @@
+{"terraform":{"backend":{"s3":{"bucket":"deepansh-app-backend","dynamodb_table":"deepansh-app-backend-table","encrypt":true,"key":"infra/terraform.tfstate","profile":"default","region":"us-east-1"}}}}
