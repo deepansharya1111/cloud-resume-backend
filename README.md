@@ -15,7 +15,7 @@ This Terraform setup uses the `ansraliant/s3-state/aws` module to configure a re
   - "gcloud init" -> "gcloud projects list" -> "gcloud config set project your_project_id"
   - Terraform requires gcloud's `credentials` or `access_token` refer [1](https://cloud.google.com/iam/docs/keys-list-get) & [2](https://youtu.be/0PwvhWa3OOY?si=iT1QEhvD22xfqvPI). Set manually or run `gcloud auth application-default login`.
 
-#### Or Import your own infrastructure created from the console to recreate similar code structure:
+#### It is best to import your own infrastructure created from the console to recreate a similar code structure in order to prevent massive code changes:
 
 * Define the basic terraform code for your resources.
   * Run "terraform init"
@@ -28,7 +28,7 @@ This Terraform setup uses the `ansraliant/s3-state/aws` module to configure a re
   * Refine the code by replacing deprecated code blocks to resolve the warnings mentioned upon running "terraform plan" with the respective updated resource blocks.
   * "terraform apply" will show that it is creating new resources. This is normal since Terraform considers separate resource blocks to be different resources. However, it shall not affect your existing infrastructure as long as you have used the original code or resolved the "terraform plan" warnings carefully.
 
-## Usage
+## Usage of existing code
 
 1. Clone this repository:
 
@@ -43,6 +43,7 @@ This Terraform setup uses the `ansraliant/s3-state/aws` module to configure a re
    - For creating a GCP Storage bucket, change the `project` and `name` variables in `gcp.tf`.
    - AWS Resources:
      - For the S3 bucket to store the frontend code, change every `deepansh_app_bucket` and `deepansh.app` in `aws.tf`.
+     - For CloudFront distribution and ACM Certificate, change every instance of your bucket name `deepansh.app` and domain `*.deepansh.app` or CNAME `www.deepansh.app` with your `bucket_name`,  `*your.domain`, and `your CNAME` that is registered as a DNS record in your DNS.
 3. Initialize Terraform:
    ```
    terraform init
