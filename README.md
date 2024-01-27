@@ -17,7 +17,7 @@ This Terraform setup uses the `ansraliant/s3-state/aws` module to configure a re
 
 ### Option 1) Create infrastructure from the console and import it to Terraform to recreate a similar code structure and avoid massive code changes:
 
-* Define the basic terraform code for your resources.
+* First, define the basic terraform code for your resources (without any additional arguments like name, etc.) then:
   * Run "terraform init"
   * ''terraform validate"
   * ''terraform import resource.resource_name resource_identifier"
@@ -43,7 +43,8 @@ This Terraform setup uses the `ansraliant/s3-state/aws` module to configure a re
    - For creating a GCP Storage bucket, change the `project` and `name` variables in `gcp.tf`.
    - AWS Resources:
      - For the S3 bucket to store the frontend code, change every `deepansh_app_bucket` and `deepansh.app` in `aws.tf`.
-     - For CloudFront distribution and ACM Certificate, change every instance of your bucket name `deepansh.app` and domain `*.deepansh.app` or CNAME `www.deepansh.app` with your `bucket_name`,  `*your.domain`, and `your CNAME` that is registered as a DNS record in your DNS.
+     - For CloudFront distribution and ACM Certificate: change every instance of your bucket name `deepansh.app` and domain `*.deepansh.app` or CNAME `www.deepansh.app` with your `bucket_name`,  `*your.domain`, and `your CNAME` that is registered as a DNS record in your DNS.
+     - (optional) For DynamoDB table and Lambda Function: customize lambda function name or iam policy names, etc, to your liking; else, leave it as it is.
 3. Initialize Terraform:
    ```
    terraform init

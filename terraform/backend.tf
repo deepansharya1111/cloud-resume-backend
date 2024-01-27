@@ -1,6 +1,9 @@
+# Check the newly created dynamodb table is there or not after running this configuration:
+# aws dynamodb list-tables
+
 #The module used below automatically creates the s3 bucket and DynamoDB table and handles the state file migration on the following 'terraform init'
 
-# Use the s3-state module for Terraform state storage
+# Using the s3-state module for Terraform state storage
 module "remote_state" {
   source = "ansraliant/s3-state/aws"
 
@@ -12,7 +15,6 @@ module "remote_state" {
   #infra is the folder name that will be created in the s3 bucket after hitting terraform init next time upon taking confirmation for migrating the state file. The latter part is where our current state file's local backup is being saved for reference with the remote backend.
   states = { infra = "../terraform/backend.tf.json" }
 }
-
 
 #Below is the configuration for backend.tf if we planned to go for the traditional option2 from https://github.com/orgs/gruntwork-io/discussions/769
 

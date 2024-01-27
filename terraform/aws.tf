@@ -129,9 +129,9 @@ variable "create_acm_certificate" {
 
 data "aws_acm_certificate" "deepansh_app_acm_certificate" {
   # Reference the existing certificate
-  domain = "*.deepansh.app"
+  domain   = "*.deepansh.app"
   statuses = ["ISSUED"]
-  tags   = {}
+  tags     = {}
 }
 
 resource "aws_acm_certificate" "deepansh_app_acm_certificate" {
@@ -148,7 +148,7 @@ resource "aws_acm_certificate" "deepansh_app_acm_certificate" {
   }
 }
 
-#----------------
+#----------------AWS CLOUDFRONT CONFIGURATION
 
 locals {
   enable_subpages_version = 6
@@ -233,4 +233,141 @@ resource "aws_cloudfront_distribution" "deepansh_app_s3_distribution" {
     ssl_support_method             = "sni-only"
   }
 }
+
+#AWS DYNAMODB CONFIGURATION
 #-------------------------------------------------------------------------------------
+#Check existing dynamodb tables:
+# aws dynamodb list-tables
+
+#See configuration of your dynamodb table
+# aws dynamodb describe-table --table-name your_table_name
+
+# aws_dynamodb_table.cloudresume-table-tf:
+resource "aws_dynamodb_table" "cloudresume-table-tf" {
+  billing_mode                = "PROVISIONED"
+  deletion_protection_enabled = false
+  hash_key                    = "id"
+  name                        = "cloudresume-table"
+  read_capacity               = 1
+  stream_enabled              = false
+  table_class                 = "STANDARD"
+  tags                        = {}
+  tags_all                    = {}
+  write_capacity              = 1
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  point_in_time_recovery {
+    enabled = false
+  }
+  # CHECK TTL STATUS: aws dynamodb describe-time-to-live --table-name cloudresume-table
+  # But since our counter should be updated instantly, we do not want to tnable ttl.
+  #  ttl {
+  #    attribute_name = "your_ttl_attribute_name_here"
+  #    enabled = false
+  #  }
+}
+
+#AWS LAMBDA CONFIGURATION
+#-------------------------------------------------------------------------------------
+
+#----------------CREATE A LAMBDA FUNCTION CALLED cloudresume-python-function
+resource "aws_lambda_function" "cloudresume-lambda-function" {
+  filename         = data.archive_file.zip.output_path
+  source_code_hash = data.archive_file.zip.output_base64sha256
+  function_name    = "cloudresume-lambda-python-function"
+  role    = aws_iam_role.iam_of_cloudresume_lambda_creation_role.arn
+  handler = "cloudresume-lambdafunction.lambda_handler"
+  runtime = "python3.8"
+}
+
+#----------------assume_role_policy: IAM POLICY FOR ALLOWING LAMBDA FUNCTION CREATION
+resource "aws_iam_role" "iam_of_cloudresume_lambda_creation_role" {
+  name = "cloudresume_lambda_creation_role"
+
+  # assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+#----------------PATH FOR PYTHON_CODE_FOR_LAMBDA.PY FILE
+data "archive_file" "zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda-function/"
+  output_path = "${path.module}/packed-cloudresume-lambdafunction.zip"
+}
+
+#----------------resource access policy: IAM POLICY TO ALLOW LAMBDA TO ACCESS DYNAMODB
+resource "aws_iam_policy" "iam_for_cloudresume_lambda_to_access_dynamodb" {
+  name        = "aws_iam_policy_for_cloudresume_lambda_creation_role_to_access_dynamodb"
+  path        = "/"
+  description = "AWS IAM Policy for managing the resume project role"
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Action" : [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource" : "arn:aws:logs:*:*:*",
+        "Effect" : "Allow"
+      },
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "dynamodb:UpdateItem",
+          "dynamodb:GetItem",
+          "dynamodb:PutItem"
+        ],
+        "Resource" : "arn:aws:dynamodb:*:*:table/cloudresume-table"
+      }
+    ]
+  })
+}
+
+#----------------ATTACH BOTH IAM POLICIES = CREATION + DYNAMODB ACCESS
+resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
+  role       = aws_iam_role.iam_of_cloudresume_lambda_creation_role.name
+  policy_arn = aws_iam_policy.iam_for_cloudresume_lambda_to_access_dynamodb.arn
+}
+
+#----------------ENABLE THE FUNCTION URL OF LAMBDA
+resource "aws_lambda_function_url" "url1" {
+  function_name      = aws_lambda_function.cloudresume-lambda-function.function_name
+  authorization_type = "NONE"
+
+  cors {
+    allow_credentials = true
+    allow_origins     = ["*"]
+    allow_methods     = ["*"]
+    allow_headers     = ["date", "keep-alive"]
+    expose_headers    = ["keep-alive", "date"]
+    max_age           = 86400
+  }
+}
+
+
+#AWS LAMBDA@echo CONFIGURATION
+#-------------------------------------------------------------------------------------
+#LIST ACTIVE LAMBDA FUNCTIONS:
+#aws lambda list-functions
+#aws lambda get-function --function-name my-function
