@@ -1,8 +1,8 @@
 # Cloud-Resume-Backend
 
-This Terraform setup uses the `ansraliant/s3-state/aws` module to configure a remote backend with S3 and DynamoDB for storing Terraform state.
+This Terraform setup uses the `ansraliant/s3-state/aws` module to configure a remote backend with S3 and DynamoDB for storing the Terraform state remotely.
 
-#### Click here for 👉 [Cloud Resume Frontend](https://github.com/deepansharya1111/cloud-resume-frontend/tree/main).
+### Click here for 👉 [Cloud Resume Frontend](https://github.com/deepansharya1111/cloud-resume-frontend/tree/main).
 
 ## Prerequisites for creating the cloud infrastructure with given code
 
@@ -15,7 +15,7 @@ This Terraform setup uses the `ansraliant/s3-state/aws` module to configure a re
   - "gcloud init" -> "gcloud projects list" -> "gcloud config set project your_project_id"
   - Terraform requires gcloud's `credentials` or `access_token` refer [1](https://cloud.google.com/iam/docs/keys-list-get) & [2](https://youtu.be/0PwvhWa3OOY?si=iT1QEhvD22xfqvPI). Set manually or run `gcloud auth application-default login`.
 
-#### It is best to import your own infrastructure created from the console to recreate a similar code structure in order to prevent massive code changes:
+### Option 1) Create infrastructure from the console and import it to Terraform to recreate a similar code structure and avoid massive code changes:
 
 * Define the basic terraform code for your resources.
   * Run "terraform init"
@@ -25,8 +25,8 @@ This Terraform setup uses the `ansraliant/s3-state/aws` module to configure a re
     * Find and copy the imported code block for your resource.
     * Replace the code with the basic code in your Terraform files.
   * "terraform validate" to know which code lines we need to remove from our Terraform files.
-  * Refine the code by replacing deprecated code blocks to resolve the warnings mentioned upon running "terraform plan" with the respective updated resource blocks.
-  * "terraform apply" will show that it is creating new resources. This is normal since Terraform considers separate resource blocks to be different resources. However, it shall not affect your existing infrastructure as long as you have used the original code or resolved the "terraform plan" warnings carefully.
+  * Refine the code by replacing deprecated code blocks to resolve the warnings (if any) seen upon running "terraform plan" with the respective resource blocks.
+  * "terraform plan" or "terraform apply" might show that it creates new resources. This is normal since Terraform considers separate resource policy blocks as individual resources. However, it shall not affect your existing infrastructure if you have used the original code or carefully resolved the "terraform plan" warnings.
 
 ## Usage of existing code
 

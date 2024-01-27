@@ -108,35 +108,46 @@ resource "aws_s3_bucket_versioning" "deepansh_app_bucket" {
 #-------------------------------------------------------------------------------------
 
 #----------------ACM CERTIFICATE FOR YOUR DOMAIN
-#Set default = true if first time creting acm certificate, then set to false before second terraform apply.
+#LIST EXISTING acm_certificate_arn CERTIFICATES: aws acm list-certificates --query "CertificateSummaryList[*].CertificateArn"
+#DELETE EXISTING acm_certificate_arn CERTIFICATES: aws acm delete-certificate --certificate-arn <full-arn-of-certificate>
+
+#The behavior of the code is as follows:
+
+#If default create_acm_certificate is true:
+####It checks if there is an existing ACM certificate with a non-empty ARN using the data source.
+####If an ACM certificate with a non-empty ARN exists, it does not create a new certificate.
+####If ACM certificate with a non-empty ARN does not exists, it creates a new certificate.
+#So, If there is an existing ACM certificate, it will not create a new certificate, otherwise it will.
+
+#If default create_acm_certificate is false:
+#It will destroy the existing certificate
+
 variable "create_acm_certificate" {
   type    = bool
-  default = false
+  default = true
 }
 
 data "aws_acm_certificate" "deepansh_app_acm_certificate" {
   # Reference the existing certificate
-
-  domain   = "*.deepansh.app"
+  domain = "*.deepansh.app"
   statuses = ["ISSUED"]
-  tags     = {}
+  tags   = {}
 }
-#If importing, Find your full arn by running: aws acm list-certificates --query "CertificateSummaryList[*].CertificateArn"
+
 resource "aws_acm_certificate" "deepansh_app_acm_certificate" {
-  count = var.create_acm_certificate ? 1 : (
-    length(data.aws_acm_certificate.deepansh_app_acm_certificate.arn) > 0 ? 1 : 0
-  )
+  count = var.create_acm_certificate ? 1 : 0
+
   domain_name               = "*.deepansh.app"
   key_algorithm             = "RSA_2048"
   subject_alternative_names = ["*.deepansh.app", "deepansh.app"]
   tags                      = {}
-  tags_all                  = {}
   validation_method         = "DNS"
 
   options {
     certificate_transparency_logging_preference = "ENABLED"
   }
 }
+
 #----------------
 
 locals {
